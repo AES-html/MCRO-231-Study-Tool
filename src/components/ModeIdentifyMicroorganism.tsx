@@ -122,9 +122,7 @@ export const ModeIdentifyMicroorganism: React.FC<ModeIdentifyMicroorganismProps>
     if (!freeRecallSearch.trim()) return [];
     const q = freeRecallSearch.toLowerCase();
     return MICROORGANISMS.filter(
-      (m) =>
-        m.scientificName.toLowerCase().includes(q) ||
-        m.disease.toLowerCase().includes(q)
+      (m) => m.scientificName.toLowerCase().includes(q)
     ).slice(0, 5);
   }, [freeRecallSearch]);
 
@@ -258,7 +256,7 @@ export const ModeIdentifyMicroorganism: React.FC<ModeIdentifyMicroorganismProps>
                 <div>
                   <div className="font-bold text-slate-900 text-sm">{card.scientificName}</div>
                   <div className="text-xs text-slate-500">
-                    Disease: {card.disease} • {card.organismType}
+                    {card.organismType} • {card.morphologyDescription}
                   </div>
                 </div>
                 <div>
@@ -359,7 +357,7 @@ export const ModeIdentifyMicroorganism: React.FC<ModeIdentifyMicroorganismProps>
               Mode 2: Identify Microorganism • Mystery Microbe #{currentIndex + 1}
             </div>
             <div className="text-xl font-bold tracking-tight text-white flex items-center gap-2 mt-0.5">
-              <span>Disease: {currentCard.disease}</span>
+              <span>Mystery Organism Clues</span>
               <span className="text-xs bg-purple-950/60 px-2.5 py-0.5 rounded-full border border-purple-400/30 text-purple-200 font-mono">
                 {currentCard.organismType}
               </span>
@@ -535,7 +533,6 @@ export const ModeIdentifyMicroorganism: React.FC<ModeIdentifyMicroorganismProps>
                   >
                     <div>
                       <div className="font-serif italic font-bold text-sm">{opt.scientificName}</div>
-                      <div className="text-xs opacity-75">{opt.disease}</div>
                     </div>
                     {isSubmitted && isTarget && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
                     {isSubmitted && isSelected && !isTarget && <XCircle className="w-4 h-4 text-rose-600" />}
@@ -554,7 +551,7 @@ export const ModeIdentifyMicroorganism: React.FC<ModeIdentifyMicroorganismProps>
                   disabled={isSubmitted}
                   value={freeRecallSearch}
                   onChange={(e) => setFreeRecallSearch(e.target.value)}
-                  placeholder="Type microorganism or disease name (e.g. Klebsiella, Bordetella, HSV)..."
+                  placeholder="Type microorganism name (e.g. Klebsiella, Bordetella, Treponema)..."
                   className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                 />
               </div>
@@ -577,7 +574,6 @@ export const ModeIdentifyMicroorganism: React.FC<ModeIdentifyMicroorganismProps>
                         <span className="italic font-serif font-bold text-sm text-purple-950">
                           {sug.scientificName}
                         </span>
-                        <span className="text-xs text-slate-500 ml-2">({sug.disease})</span>
                       </div>
                       <span className="text-xs text-purple-600 font-medium">Select</span>
                     </button>
@@ -639,6 +635,7 @@ export const ModeIdentifyMicroorganism: React.FC<ModeIdentifyMicroorganismProps>
             card={currentCard}
             isBookmarked={bookmarkedIds.includes(currentCard.id)}
             onToggleBookmark={onToggleBookmark}
+            hideDisease={true}
           />
         </div>
       )}

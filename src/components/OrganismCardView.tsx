@@ -7,13 +7,15 @@ interface OrganismCardViewProps {
   isBookmarked?: boolean;
   onToggleBookmark?: (id: string) => void;
   compact?: boolean;
+  hideDisease?: boolean;
 }
 
 export const OrganismCardView: React.FC<OrganismCardViewProps> = ({
   card,
   isBookmarked = false,
   onToggleBookmark,
-  compact = false
+  compact = false,
+  hideDisease = false,
 }) => {
   const [speaking, setSpeaking] = useState(false);
 
@@ -52,7 +54,7 @@ export const OrganismCardView: React.FC<OrganismCardViewProps> = ({
             MCRO 251 • Organism Cards
           </div>
           <div className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-            <span>{card.disease}</span>
+            <span>{hideDisease ? card.scientificName : card.disease}</span>
             <span className="text-xs font-normal text-blue-200 bg-blue-900/50 px-2 py-0.5 rounded-full border border-blue-400/30">
               {card.organismType}
             </span>
@@ -95,13 +97,15 @@ export const OrganismCardView: React.FC<OrganismCardViewProps> = ({
         </div>
       </div>
 
-      {/* Scientific Name Subheader */}
-      <div className="bg-amber-50/70 border-b border-amber-200/70 px-4 py-2 flex items-baseline justify-between flex-wrap gap-2">
-        <div className="text-xs font-bold text-amber-900 uppercase tracking-wide">Scientific Name:</div>
-        <div className="text-base italic font-serif font-bold text-purple-900">
-          {card.scientificName}
+      {/* Scientific Name Subheader (only if disease is shown in main header) */}
+      {!hideDisease && (
+        <div className="bg-amber-50/70 border-b border-amber-200/70 px-4 py-2 flex items-baseline justify-between flex-wrap gap-2">
+          <div className="text-xs font-bold text-amber-900 uppercase tracking-wide">Scientific Name:</div>
+          <div className="text-base italic font-serif font-bold text-purple-900">
+            {card.scientificName}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Grid Table Layout (Matching the Dr. Cramer card grid) */}
       <div className="p-4 space-y-3.5 text-xs">
