@@ -189,26 +189,9 @@ export const OrganismCardView: React.FC<OrganismCardViewProps> = ({
         {/* Row 3: Morphology & At-Risk */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
           <div className="p-2.5 bg-blue-50/60 rounded-lg border border-blue-200">
-            <div className="font-bold text-blue-950 mb-1 flex items-center justify-between flex-wrap gap-1">
-              <div className="flex items-center gap-1.5">
-                <Dna className="w-3.5 h-3.5 text-blue-700" />
-                <span>Morphology & Genome:</span>
-              </div>
-              {/* Strandedness indicator pill */}
-              {card.strandedness !== 'N/A' ? (
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                  card.strandedness === 'Single-stranded'
-                    ? 'bg-amber-100 text-amber-900 border-amber-300'
-                    : 'bg-purple-100 text-purple-900 border-purple-300'
-                }`}>
-                  {card.strandedness === 'Single-stranded' ? 'ss (Single-Stranded)' : 'ds (Double-Stranded)'}
-                  {card.nucleicAcidType && ` • ${card.nucleicAcidType}`}
-                </span>
-              ) : (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700 border border-slate-300">
-                  No Nucleic Acid (Prion)
-                </span>
-              )}
+            <div className="font-bold text-blue-950 mb-1 flex items-center gap-1.5">
+              <Dna className="w-3.5 h-3.5 text-blue-700" />
+              <span>Morphology & Structure:</span>
             </div>
 
             <div className="flex gap-1 flex-wrap my-1.5">

@@ -392,22 +392,9 @@ export const ModeIdentifyMicroorganism: React.FC<ModeIdentifyMicroorganismProps>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Box 1: Morphology & Structure */}
             <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
-              <div className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between flex-wrap gap-1">
-                <div className="flex items-center gap-1.5">
-                  <FlaskConical className="w-3.5 h-3.5 text-purple-600" />
-                  <span>Morphology & Genome</span>
-                </div>
-                {/* Strandedness indicator */}
-                {currentCard.strandedness !== 'N/A' ? (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-900 border border-purple-300">
-                    {currentCard.strandedness === 'Single-stranded' ? 'ss (Single-Stranded)' : 'ds (Double-Stranded)'}
-                    {currentCard.nucleicAcidType && ` • ${currentCard.nucleicAcidType}`}
-                  </span>
-                ) : (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700 border border-slate-300">
-                    No Nucleic Acid
-                  </span>
-                )}
+              <div className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <FlaskConical className="w-3.5 h-3.5 text-purple-600" />
+                <span>Morphology & Structure</span>
               </div>
               <div className="flex flex-wrap gap-1 mb-2">
                 {currentCard.morphologyTags.map((t) => (

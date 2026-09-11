@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   MicroorganismCard, 
   OrganismType, 
-  StrandednessType, 
   ReservoirType, 
   DirectTransmission, 
   IndirectTransmission, 
@@ -24,10 +23,11 @@ import {
   Sparkles, 
   Eye, 
   Filter, 
-  Award,
-  BookOpen,
-  Volume2,
-  Dna
+  Award, 
+  BookOpen, 
+  Volume2, 
+  ShieldAlert,
+  Dna 
 } from 'lucide-react';
 
 interface ModeAssignCharacteristicsProps {
@@ -39,7 +39,6 @@ interface ModeAssignCharacteristicsProps {
 
 interface UserSelectionState {
   organismType: OrganismType | null;
-  strandedness: StrandednessType | null;
   reservoir: ReservoirType[];
   morphologyTags: MorphologyTag[];
   incubationPeriod: IncubationType | null;
@@ -47,11 +46,13 @@ interface UserSelectionState {
   transmissionDirect: DirectTransmission[];
   transmissionIndirect: IndirectTransmission[];
   hasVaccine: boolean | null;
+  virulenceInput: string;
+  virulenceSelfGrade: boolean | null;
+  virulenceRevealed: boolean;
 }
 
 const emptySelection: UserSelectionState = {
   organismType: null,
-  strandedness: null,
   reservoir: [],
   morphologyTags: [],
   incubationPeriod: null,
@@ -59,6 +60,9 @@ const emptySelection: UserSelectionState = {
   transmissionDirect: [],
   transmissionIndirect: [],
   hasVaccine: null,
+  virulenceInput: '',
+  virulenceSelfGrade: null,
+  virulenceRevealed: false,
 };
 
 export const ModeAssignCharacteristics: React.FC<ModeAssignCharacteristicsProps> = ({
@@ -144,10 +148,8 @@ export const ModeAssignCharacteristics: React.FC<ModeAssignCharacteristicsProps>
     // 1. Organism Type (weight 15)
     const typeCorrect = userSelection.organismType === currentCard.organismType;
 
-    // 2. Strandedness: ssDNA/RNA vs dsDNA/RNA (weight 15)
-    const strandednessCorrect = userSelection.strandedness === currentCard.strandedness;
-
-    // 3. Morphology tags (weight 15)
+    // 2. Morphology & Genome tags (weight 20)
+    // Tags include: 'Gram-pos', 'Gram-neg', 'RNA', 'DNA', 'Single-stranded', 'Double-stranded', 'Naked', 'Enveloped'
     const targetMorph = new Set(currentCard.morphologyTags);
     const userMorph = new Set(userSelection.morphologyTags);
     const morphMatches = currentCard.morphologyTags.filter((t) => userMorph.has(t)).length;
@@ -156,14 +158,14 @@ export const ModeAssignCharacteristics: React.FC<ModeAssignCharacteristicsProps>
       ? userMorph.size === 0 
       : morphMatches === targetMorph.size && morphExtra === 0;
 
-    // 4. Reservoir (weight 15)
+    // 3. Reservoir (weight 15)
     const targetRes = new Set(currentCard.reservoir);
     const userRes = new Set(userSelection.reservoir);
     const resMatches = currentCard.reservoir.filter((r) => userRes.has(r)).length;
     const resExtra = userSelection.reservoir.filter((r) => !targetRes.has(r)).length;
     const reservoirCorrect = resMatches === targetRes.size && resExtra === 0;
 
-    // 5. Transmission (weight 15 - 7.5 direct, 7.5 indirect)
+    // 4. Transmission (weight 20: 10 direct, 10 indirect)
     const targetDirect = new Set(currentCard.transmissionDirect);
     const userDirect = new Set(userSelection.transmissionDirect);
     const directMatches = currentCard.transmissionDirect.filter((d) => userDirect.has(d)).length;
@@ -180,46 +182,85 @@ export const ModeAssignCharacteristics: React.FC<ModeAssignCharacteristicsProps>
       ? userIndirect.size === 0 
       : indirectMatches === targetIndirect.size && indirectExtra === 0;
 
-    // 6. Vaccine (weight 15)
+    // 5. Vaccine (weight 10)
     const vaccineCorrect = userSelection.hasVaccine === currentCard.hasVaccine;
 
-    // 7. Incubation (weight 10)
+    // 6. Incubation (weight 10)
     const incubationCorrect = userSelection.incubationPeriod === currentCard.incubationPeriod;
+
+    // 7. Virulence Factors Self-Assessment (weight 10)
+    const virulenceCorrect = userSelection.virulenceSelfGrade === true;
 
     let earnedScore = 0;
     if (typeCorrect) earnedScore += 15;
-    if (strandednessCorrect) earnedScore += 15;
-    if (morphCorrect) earnedScore += 15;
-    else if (morphMatches > 0 && morphExtra === 0) earnedScore += 8;
+
+    if (morphCorrect) earnedScore += 20;
+    else if (morphMatches > 0 && morphExtra === 0) {
+      earnedScore += Math.round((morphMatches / (targetMorph.size || 1)) * 20);
+    }
 
     if (reservoirCorrect) earnedScore += 15;
     else if (resMatches > 0 && resExtra === 0) earnedScore += 8;
 
-    if (directCorrect) earnedScore += 7.5;
-    if (indirectCorrect) earnedScore += 7.5;
-    if (vaccineCorrect) earnedScore += 15;
+    if (directCorrect) earnedScore += 10;
+    else if (directMatches > 0 && directExtra === 0) earnedScore += 5;
+
+    if (indirectCorrect) earnedScore += 10;
+    else if (indirectMatches > 0 && indirectExtra === 0) earnedScore += 5;
+
+    if (vaccineCorrect) earnedScore += 10;
     if (incubationCorrect) earnedScore += 10;
+    if (virulenceCorrect) earnedScore += 10;
 
     const percent = Math.min(100, Math.round(earnedScore));
     const isPass = percent >= 75;
 
     return {
       typeCorrect,
-      strandednessCorrect,
       morphCorrect,
       reservoirCorrect,
       directCorrect,
       indirectCorrect,
       vaccineCorrect,
       incubationCorrect,
+      virulenceCorrect,
       scorePercent: percent,
       isPass,
     };
   }, [currentCard, userSelection]);
 
+  // Keep session answers in sync when virulence self-grade or answers change after submit
+  useEffect(() => {
+    if (isSubmitted && currentCard && evaluation) {
+      setSessionAnswers((prev) => {
+        const copy = [...prev];
+        const idx = copy.findIndex((a) => a.organismId === currentCard.id);
+        if (idx !== -1) {
+          copy[idx] = {
+            organismId: currentCard.id,
+            scorePercent: evaluation.scorePercent,
+            isPass: evaluation.isPass,
+          };
+          return copy;
+        }
+        return prev;
+      });
+    }
+  }, [isSubmitted, currentCard, evaluation]);
+
+  const setVirulenceGrade = (isRight: boolean) => {
+    setUserSelection((prev) => ({
+      ...prev,
+      virulenceSelfGrade: isRight,
+      virulenceRevealed: true,
+    }));
+  };
+
   const handleSubmit = () => {
     if (!currentCard || !evaluation) return;
     setIsSubmitted(true);
+    // Reveal official virulence factors automatically on submission
+    setUserSelection((prev) => ({ ...prev, virulenceRevealed: true }));
 
     if (evaluation.scorePercent === 100) {
       try {
@@ -556,69 +597,11 @@ export const ModeAssignCharacteristics: React.FC<ModeAssignCharacteristicsProps>
           </div>
         </div>
 
-        {/* 2. Genome Strandedness (Single vs Double-Stranded DNA/RNA) */}
-        <div className="p-4 bg-purple-50/60 rounded-xl border border-purple-200">
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-purple-950 flex items-center gap-1.5">
-              <Dna className="w-3.5 h-3.5 text-purple-700" />
-              <span>2. Genome Strandedness: Single or Double-Stranded? <span className="text-rose-500">*</span></span>
-            </label>
-            {isSubmitted && (
-              <span className="text-xs font-semibold">
-                {evaluation?.strandednessCorrect ? (
-                  <span className="text-emerald-600 flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Correct ({currentCard.strandedness}{currentCard.nucleicAcidType ? ` • ${currentCard.nucleicAcidType}` : ''})
-                  </span>
-                ) : (
-                  <span className="text-rose-600 flex items-center gap-1">
-                    <XCircle className="w-3.5 h-3.5" /> Should be: {currentCard.strandedness} ({currentCard.nucleicAcidType})
-                  </span>
-                )}
-              </span>
-            )}
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-            {(['Single-stranded', 'Double-stranded', 'N/A'] as StrandednessType[]).map((st) => {
-              const isSelected = userSelection.strandedness === st;
-              const isTarget = currentCard.strandedness === st;
-              let btnClass = 'bg-white border-purple-200 text-purple-950 hover:bg-purple-100/70';
-
-              if (isSubmitted) {
-                if (isTarget) {
-                  btnClass = 'bg-emerald-100 border-emerald-500 text-emerald-950 font-bold ring-2 ring-emerald-400';
-                } else if (isSelected && !isTarget) {
-                  btnClass = 'bg-rose-100 border-rose-400 text-rose-950 line-through';
-                }
-              } else if (isSelected) {
-                btnClass = 'bg-purple-700 border-purple-800 text-white font-bold shadow-xs';
-              }
-
-              return (
-                <button
-                  key={st}
-                  id={`strandedness-${st.toLowerCase()}`}
-                  type="button"
-                  disabled={isSubmitted}
-                  onClick={() => setUserSelection({ ...userSelection, strandedness: st })}
-                  className={`px-3 py-2.5 rounded-xl text-xs font-medium border text-center transition-all ${btnClass}`}
-                >
-                  <div className="font-bold">
-                    {st === 'Single-stranded' ? 'Single-Stranded (ss)' : st === 'Double-stranded' ? 'Double-Stranded (ds)' : 'N/A (Prion)'}
-                  </div>
-                  <div className="text-[10px] opacity-80 mt-0.5">
-                    {st === 'Single-stranded' ? 'e.g. ssRNA, ssDNA' : st === 'Double-stranded' ? 'e.g. dsDNA, Bacteria' : 'No genome'}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 3. Morphology & Structural Tags */}
+        {/* 2. Morphology & Structure Tags */}
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-600">
-              3. Morphology & Genome Tags <span className="text-slate-400 font-normal">(Select all that apply)</span>
+              2. Morphology & Structure Tags <span className="text-slate-400 font-normal">(Select all that apply)</span>
             </label>
             {isSubmitted && (
               <span className="text-xs font-semibold">
@@ -925,6 +908,121 @@ export const ModeAssignCharacteristics: React.FC<ModeAssignCharacteristicsProps>
               NO ☹ (No Vaccine)
             </button>
           </div>
+        </div>
+
+        {/* 7. Virulence Factors (Free Recall & Self-Assessment) */}
+        <div className="p-4 bg-purple-50/50 rounded-xl border border-purple-200">
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-purple-950 flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-purple-700" />
+              <span>7. Virulence Factors (Free Recall & Self-Assessment)</span>
+            </label>
+            {userSelection.virulenceSelfGrade !== null && (
+              <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 ${
+                userSelection.virulenceSelfGrade 
+                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
+                  : 'bg-rose-100 text-rose-800 border border-rose-300'
+              }`}>
+                {userSelection.virulenceSelfGrade ? (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Self-Assessed: Correct (+10 pts)
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="w-3.5 h-3.5" /> Self-Assessed: Missed / Incorrect
+                  </>
+                )}
+              </span>
+            )}
+          </div>
+
+          <p className="text-xs text-purple-900/80 mb-2">
+            Enter the virulence factors (toxins, adhesins, capsules, enzymes, intracellular evasion, etc.) you associate with this organism:
+          </p>
+
+          <textarea
+            id="virulence-factor-input"
+            rows={3}
+            value={userSelection.virulenceInput}
+            onChange={(e) => setUserSelection({ ...userSelection, virulenceInput: e.target.value })}
+            placeholder="Type your recalled virulence factors here..."
+            className="w-full px-3 py-2 text-xs border border-purple-300 rounded-lg bg-white text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all"
+          />
+
+          {/* Reveal & Self-Grading Block */}
+          {!userSelection.virulenceRevealed ? (
+            <div className="mt-2.5 flex items-center justify-between flex-wrap gap-2">
+              <button
+                id="reveal-virulence-btn"
+                type="button"
+                onClick={() => setUserSelection({ ...userSelection, virulenceRevealed: true })}
+                className="px-3.5 py-2 bg-purple-700 hover:bg-purple-800 text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors flex items-center gap-1.5"
+              >
+                <Eye className="w-3.5 h-3.5" /> Check Official Virulence Factors
+              </button>
+              <span className="text-[11px] text-slate-500 italic">
+                Reveals the official card factors so you can self-check
+              </span>
+            </div>
+          ) : (
+            <div className="mt-3 p-3.5 bg-white rounded-lg border border-purple-200 shadow-2xs space-y-3">
+              <div>
+                <div className="text-[11px] font-bold uppercase tracking-wider text-purple-950 mb-1 flex items-center gap-1.5">
+                  <ShieldAlert className="w-3.5 h-3.5 text-purple-700" />
+                  Official Virulence Factors:
+                </div>
+                <div className="p-2.5 bg-purple-50/70 rounded-md border border-purple-200 text-xs font-semibold text-purple-950 leading-relaxed">
+                  {currentCard.virulenceFactors || 'None reported'}
+                </div>
+              </div>
+
+              {userSelection.virulenceInput.trim() && (
+                <div>
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    Your Response:
+                  </div>
+                  <div className="p-2.5 bg-slate-50 rounded-md border border-slate-200 text-xs text-slate-800 italic">
+                    "{userSelection.virulenceInput.trim()}"
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-2 border-t border-slate-100">
+                <div className="text-xs font-bold text-slate-800 mb-2">
+                  Based on the official response, were you right or wrong?
+                </div>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <button
+                    id="virulence-selfgrade-right-btn"
+                    type="button"
+                    onClick={() => setVirulenceGrade(true)}
+                    className={`py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                      userSelection.virulenceSelfGrade === true
+                        ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-400'
+                        : 'bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100'
+                    }`}
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    I Was Right (+10 pts)
+                  </button>
+
+                  <button
+                    id="virulence-selfgrade-wrong-btn"
+                    type="button"
+                    onClick={() => setVirulenceGrade(false)}
+                    className={`py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                      userSelection.virulenceSelfGrade === false
+                        ? 'bg-rose-600 text-white shadow-sm ring-2 ring-rose-400'
+                        : 'bg-rose-50 text-rose-800 border border-rose-300 hover:bg-rose-100'
+                    }`}
+                  >
+                    <XCircle className="w-4 h-4" />
+                    I Was Wrong / Missed
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Action Buttons */}
