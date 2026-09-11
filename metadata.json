@@ -1,0 +1,6 @@
+{
+  "name": "MCRO 251 Microbiology Study Hub",
+  "description": "Study tool and organism card library for MCRO-251 Introduction to Medical Microbiology with Dr. Cramer featuring interactive study modes and progress tracking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
