@@ -387,7 +387,7 @@ export const MICROORGANISMS: MicroorganismCard[] = [
     morphologyDescription: 'Obligate intracellular bacterium, Gram-negative coccobacillus shape (double-stranded DNA genome)',
     atRiskPopulations: 'Hikers, immunocompromised',
     signsAndSymptoms: 'Headache, pain in muscles and joints, fever, rash beginning in extremities',
-    virulenceFactors: 'Actin Tail, endotoxins, cysts resistant to stomach acid',
+    virulenceFactors: 'Actin Tail, endotoxins',
     prevention: 'General tick bite prevention',
     treatment: 'Doxycycline',
     hasVaccine: false,
