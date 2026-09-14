@@ -622,6 +622,32 @@ export const MICROORGANISMS: MicroorganismCard[] = [
       'Fatal / no treatment'
     ]
   })
+
+  defineCard({
+    id: 'giardia-lambia',
+    disease: 'Giardisis',
+    scientificName: 'Giardia Lambia',
+    organismType: 'Protozoan',
+    strandedness: 'Double-stranded',
+    nucleicAcidType: 'dsDNA',
+    reservoir: ['Environmental, Animals'],
+    id50: 'Low ID50',
+    incubationPeriod: 'Short',
+    transmissionIndirect: ['Water'],
+    morphologyTags: ['DNA', 'Double-stranded'],
+    morphologyDescription: 'Small, pear shaped parasite, multiple flagella)',
+    atRiskPopulations: 'Those consuming possibly contaminated water in nature',
+    signsAndSymptoms: 'diarrhea, nausea, vomiting, bloating',
+    virulenceFactors: 'Multiple flagella, cysts resistant to stomach acid)',
+    prevention: 'Only drink water you are sure has been purified',
+    treatment: 'General rest and recovery/antibiotics',
+    hasVaccine: false,
+    notes: 'N/A',
+    highYieldBuzzwords: [
+      'Protozoann',
+      'Cysts and Trophozites'
+    ]
+  })
 ];
 
 export const CHARACTERISTIC_OPTIONS = {
